@@ -4,7 +4,7 @@ new PhonesPage(
 	document.querySelector('App')
 );
 
-fetch('http://swapi.com/api/people/1')
+fetch('api/example/example.json')
 	.then((response) => {
 		return response.json();
 	})
