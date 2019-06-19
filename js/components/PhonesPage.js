@@ -2,31 +2,60 @@ import PhonesCatalog from './PhonesCatalog.js';
 import PhoneViewer from './PhoneViewer.js';
 import ShoppingCart from './ShoppingCart.js';
 import {getAll, getById} from '../api/phone.js';
+import Component from "../Component.js";
 
-export default class PhonesPage {
+export default class PhonesPage extends Component {
 	state;
 	constructor(element) {
-		this.element = element;
+		super(element);
 
 		this.state = {
-			phones: getAll(),
+			phones: [],
 			selectedPhone: null,
 			basketItems: [],
 			itemAdded: null,
 		};
 
+		this.addBasketItem = (phoneId) => {
+			this.setState({
+				basketItems: [
+					...this.state.basketItems,
+					phoneId
+				],
+			});
+		};
+		this.deleteBasketItem = (index) => {
+			const items = this.state.basketItems;
+
+			this.setState({
+				basketItems: [
+					...items.slice(0, index),
+					...items.slice(index + 1, -1)
+				],
+			})
+		};
+
+		this.showPhone = (phoneId) => {
+			getById(phoneId)
+				.then(phoneDetails => {
+					this.setState({ selectedPhone: phoneDetails });
+				});
+		};
+		this.hidePhone = () => {
+			this.setState({
+				selectedPhone: null,
+			});
+		};
+
 		this.render();
 
-	}
+		const phonePromise = getAll();
 
-	initComponent(constructor, props) {
-		const container = this.element.querySelector(constructor.name);
+		phonePromise
+			.then(phones => {
+				this.setState({ phones: phones });
+			});
 
-		if (!container) {
-			return;
-		}
-
-		new constructor(container, props);
 	}
 
 	render() {
@@ -47,23 +76,8 @@ export default class PhonesPage {
 							</select>
 							</p>
 					</section>
-					
-					<section>
-						<p>Shopping Cart</p>
-						
-						${this.state.itemAdded ? `
-							<ul
-							data-element="basket-list"
-							class="basket-list"
-							>
-								<ShoppingCart></ShoppingCart>
-							</ul>
-						` : `
-							<p data-cart="empty">Корзина пуста</p>
-						`}
-					</section>
 
-					
+					<ShoppingCart></ShoppingCart>
 
 				</div>
 
@@ -80,54 +94,26 @@ export default class PhonesPage {
 
 		this.initComponent(PhonesCatalog, {
 			phones: this.state.phones,
-			basketItems: this.state.basketItems,
-
-			onItemAdded: (phoneId) => {
-				this.state.basketItems.push(phoneId);
-				this.state.itemAdded = true;
-				this.render();
-			},
-
-			onPhoneSelected: (phoneId) => {
-				this.state.selectedPhone = getById(phoneId);
-				this.render();
-			},
+			items: this.state.basketItems,
+			onPhoneSelected: this.showPhone,
+			onAdd: this.addBasketItem,
 		});
 
 		this.initComponent(PhoneViewer, {
 			phone: this.state.selectedPhone,
-
-			onBack: () => {
-				this.state.selectedPhone = null;
-				this.render();
-			},
-
+			onBack: this.hidePhone,
 			onItemRemoved: (removedElem) => {
 				this.state.basketItems.splice(removedElem, 1);
 				this.render();
 			},
-
-			onItemAdded: (phoneId) => {
-				this.state.basketItems.push(phoneId);
-				this.state.itemAdded = true;
-				this.render();
-			},
+			onAdd: this.addBasketItem
 		});
 
 		this.initComponent(ShoppingCart, {
 			phones: this.state.phones,
-			basketItems: this.state.basketItems,
-
-			onItemRemoved: (removedElem) => {
-				this.state.basketItems.splice(removedElem, 1);
-				this.render();
-			},
-
-			onItemAdded: (phoneId) => {
-				this.state.basketItems.push(phoneId);
-				this.state.itemAdded = true;
-				this.render();
-			},
+			items: this.state.basketItems,
+			onDelete: this.deleteBasketItem,
+			onAdd: this.addBasketItem
 		});
 
 

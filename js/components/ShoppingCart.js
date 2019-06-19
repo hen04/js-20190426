@@ -1,31 +1,33 @@
-export default class ShoppingCart {
+import Component from "../Component.js";
+
+export default class ShoppingCart extends Component {
 	state;
 	constructor(element, props) {
-		this.element = element;
-		this.props = props;
+		super(element, props);
 
 		this.render();
 
-		this.element.addEventListener('click', (event) => {
-			const removeFromCart = event.target.closest('shoppingcart button');
-
-			if (!removeFromCart) {
-				return;
-			}
-
-			const removedElem = removeFromCart.dataset.count;
-			this.props.onItemRemoved(removedElem);
+		this.on('click', 'delete-button', (event) => {
+			this.props.onDelete(+event.delegateTarget.dataset.itemIndex);
 		});
-
-
 	}
 
 	render() {
+		const { items } = this.props;
 
 		this.element.innerHTML = `
-			${this.props.basketItems.map( (item, i) => `
-				<li>${item}<button data-count="${i}">x</button></li>
-			`).join('')}
+		<section>
+			<p>Shopping Cart</p>
+			<ul>
+				${items.map( (item, index) => `
+					<li>${item}
+					<button 
+					data-element="delete-button"
+					data-item-index="${index}"
+					>x</button></li>
+				`).join('')}
+			</ul>
+		</section>
 		`;
 	}
 }

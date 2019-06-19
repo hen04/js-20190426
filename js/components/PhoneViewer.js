@@ -1,77 +1,56 @@
-export default class PhoneViewer {
+import Component from "../Component.js";
+
+export default class PhoneViewer extends Component {
 	state;
 	constructor(element, props) {
-		this.element = element;
-		this.props = props;
+		super(element, props);
 
 		this.state = {
-			currentPicture: this.props.phone.images[0],
-			currentName: this.props.phone.name,
-			currentDescr: this.props.phone.description
+			currentPicture: this.props.phone.images[0]
 		};
 
 		this.render();
 
-		this.element.addEventListener('click', (event) => {
-			const delegateTarget = event.target.closest('[data-element="back-button"]');
+		this.on('click', 'back-button', this.props.onBack);
 
-			if (!delegateTarget) {
-				return;
-			}
-
-			this.props.onBack();
+		this.on('click', 'thumbnail', (event) => {
+			this.setState({
+				currentPicture: event.delegateTarget.src,
+			});
 		});
 
-
-		this.element.addEventListener('click', (event) => {
-
-			const imgBig = document.querySelector('.phone');
-			const delegateTarget = event.target.closest('li img');
-
-			if (!delegateTarget) {
-				return;
-			}
-
-			const imgSrc = delegateTarget.getAttribute('src');
-			imgBig.setAttribute('src', imgSrc);
-		});
-
-
-		this.element.addEventListener('click', (event) => {
-			const addToCart = event.target.closest('[data-element="add-to-basket"]');
-
-			if (!addToCart) {
-				return;
-			}
-
-			this.props.onItemAdded(addToCart.dataset.phoneId);
+		this.on('click', 'add-button', () => {
+			this.props.onAdd(this.props.phone.id);
 		});
 
 	}
 
+
 	render() {
-		const { phone } = this.props;
+		const { phone } = this.props; // const phone = this.props.phone;
+		const { currentPicture } = this.state;
 
 		this.element.innerHTML = `
-
-			<img class="phone" src="${ this.state.currentPicture }">
-
-			<button data-element="back-button">Back</button>
-			<button data-element="add-to-basket" data-phone-id="${ this.state.currentName }">Add to basket</button>
-
-			<h1>${ this.state.currentName }</h1>
-
-			<p>${ this.state.currentDescr }</p>
-
-			<ul class="phone-thumbs">
-
-				${phone.images.map( image => `
-					<li>
-						<img src="${image}" alt="">
-					</li>
-				`).join('') }
-
-			</ul>
+			<div>
+				<img class="phone" src="${ currentPicture }">
+	
+				<button data-element="back-button">Back</button>
+				<button data-element="add-button" data-phone-id="${phone.name}">Add to basket</button>
+	
+				<h1>${phone.name}</h1>
+				<p>${phone.description}</p>
+	
+				<ul class="phone-thumbs">
+					${phone.images.map(imageUrl => `
+						<li>
+							<img 
+								src="${imageUrl}" alt=""
+								data-element="thumbnail"
+							>
+						</li>
+					`).join('') }
+				</ul>
+			</div>
 		`;
 	}
 }
